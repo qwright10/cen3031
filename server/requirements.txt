@@ -1,3 +1,7 @@
 bcrypt
-django
+python-dotenv
+flask
+marshmallow
+psycopg2-binary
 pyjwt
+webauthn
