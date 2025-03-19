@@ -75,5 +75,18 @@ def index():
     results = cur.fetchall()
     return json.dumps(results)
 
+@app.route("/api/profile", methods=["GET"])
+@jwt_required()
+def get_profile():
+    user_id = get_jwt_identity()
+
+    # Fetch user details from database
+    cur.execute("SELECT username, email FROM account WHERE id = %s;", (user_id,))
+    user = cur.fetchone()
+
+    if user:
+        return jsonify({"username": user[0], "email": user[1]}), 200
+    return jsonify({"message": "User not found"}), 404
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
