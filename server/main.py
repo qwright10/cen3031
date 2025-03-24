@@ -29,26 +29,28 @@ class RegisterSchema(Schema):
     password = fields.String(required=True)
 
 @app.route("/api/register", methods=["POST"])
-def api_register():
-    body = read_as(request.json, RegisterSchema)
-    if body is None:
-        return make_response(jsonify({"message": "No data"}), 400)
+def register():
+    data = request.json
+    username = data.get("username")
+    email = data.get("email")
+    password = data.get("password")
 
-    username = body["username"]
-    email = body["email"]
-    password = body["password"]
+    if not username or not email or not password:
+        return jsonify({"error": "Missing required fields"}), 400
 
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    cur.execute("SELECT id FROM account WHERE username = %s;", (username,))
+    if cur.fetchone():
+        return jsonify({"error": "Username already taken"}), 400
 
-    try:
-        cur.execute(
-            "Please insert into account (username, email, password) Values (%s, %s, %s) Returning id",
-            (username, email, hashed_password),
-        )
-        conn.commit()
-        return jsonify({"message": "User registered successfully"}), 201
-    except psycopg2.Error as e:
-        return make_response(jsonify({"message": str(e)}), 500)
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    cur.execute(
+        "INSERT INTO account (username, email, password) VALUES (%s, %s, %s) RETURNING id;",
+        (username, email, hashed_password)
+    )
+    conn.commit()
+
+    return jsonify({"message": "User registered successfully"}), 201
 
 @app.route("/api/login", methods=["POST"])
 def api_login():
