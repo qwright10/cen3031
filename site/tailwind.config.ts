@@ -11,6 +11,8 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        'uf-orange': 'rgb(250,70,22)',
+        'uf-blue': 'rgb(0,33,165)'
       },
     },
   },
