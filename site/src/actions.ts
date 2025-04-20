@@ -145,7 +145,8 @@ export async function submitQuiz(formData: FormData) {
     notFound();
   }
 
-  const quizId = validation.data.quiz_id;
+  const quizId = validation.data['quiz_id'];
+  if (typeof quizId !== 'string') notFound();
 
   const quiz = await db
     .selectFrom('quiz')
@@ -218,7 +219,7 @@ export async function submitQuiz(formData: FormData) {
   redirect(`/quiz/${quizId}/${String(attemptId)}`);
 }
 
-function generateChallenge(username?: string, password?: string, emailHash?: string, userId?: string) {
+/*function generateChallenge(username?: string, password?: string, emailHash?: string, userId?: string) {
   return db
     .insertInto('challenge')
     .values({
@@ -228,7 +229,7 @@ function generateChallenge(username?: string, password?: string, emailHash?: str
       user_id: userId,
     })
     .returningAll();
-}
+}*/
 
 function signToken(userId: string) {
   return sign({
