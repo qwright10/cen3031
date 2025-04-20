@@ -20,6 +20,7 @@ export default async function User({ params }: UserPageProps) {
       eb.selectFrom('scored_quiz_attempt')
         .select('timestamp')
         .whereRef('scored_quiz_attempt.account_id', '=', 'account.id')
+        .limit(1)
         .as('last_attempt_timestamp'),
       jsonArrayFrom(
         eb.selectFrom('quiz')
