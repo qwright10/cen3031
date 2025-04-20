@@ -1,13 +1,222 @@
 'use server';
 
-import { db } from '@/db';
+import 'server-only';
+import { db, Question } from '@/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { compare, hash } from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import sha1 from 'sha1';
 import { DatabaseError } from 'pg';
+
+import { TempQuestion } from '@/app/create/types';
+import { requireUser } from '@/session';
+import { z } from 'zod';
+
+export interface CreateQuizOptions {
+  questions: TempQuestion[];
+  title: string;
+  visibility: string;
+}
+
+export type CreateQuizValidation = { s: 'invalid_title' }
+  | { s: 'missing_prompt', q: number }
+  | { s: 'missing_options', q: number }
+  | { s: 'missing_answer', q: number }
+  | { s: 'unknown' };
+
+export async function createQuiz(options: CreateQuizOptions): Promise<CreateQuizValidation> {
+  const user = await requireUser();
+
+  const trimmedTitle = options.title.trim();
+
+  if (trimmedTitle.length < 1 || trimmedTitle.length > 128) {
+    return { s: 'invalid_title' };
+  }
+
+  if (options.questions.length < 1) {
+    return { s: 'unknown' };
+  }
+
+  const transformed = Array<Omit<Question, 'id' | 'quiz_id'>>();
+
+  if (!['public', 'private'].includes(options.visibility)) {
+    return { s: 'unknown' };
+  }
+
+  for (let i = 0; i < options.questions.length; i++) {
+    const question = options.questions[i];
+
+    if (question.type !== 'true_false' && question.options.every(o => !o.value.trim())) {
+      return { s: 'missing_options', q: i };
+    }
+
+    const trimmedPrompt = question.prompt.trim();
+    if (!trimmedPrompt) {
+      return { s: 'missing_prompt', q: i };
+    }
+
+    const q = {
+      type: question.type,
+      prompt: trimmedPrompt,
+      choices: <string[] | null>[],
+      answers: <number[]>[],
+    };
+
+    if (question.type === 'multiple_choice' || question.type === 'true_false') {
+      for (let j = 0; j < question.options.length; j++) {
+        const option = question.options[j];
+        if (question.type === 'multiple_choice') {
+          q.choices?.push(option.value.trim());
+        } else {
+          q.choices = null;
+        }
+
+        if (option.correct) {
+          if (q.answers.length) {
+            return { s: 'unknown' };
+          }
+
+          q.answers.push(j);
+        }
+      }
+
+      transformed.push(q);
+    } else {
+      for (let j = 0; j < question.options.length; j++) {
+        const option = question.options[j];
+        q.choices?.push(option.value.trim());
+
+        if (option.correct) {
+          q.answers.push(j);
+        }
+      }
+
+      transformed.push(q);
+    }
+  }
+
+  const id = await db
+    .transaction()
+    .execute(async trx => {
+      const { id } = await trx
+        .insertInto('quiz')
+        .values({
+          owner_id: user.id,
+          name: trimmedTitle,
+          is_private: options.visibility === 'private',
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow();
+
+      await trx
+        .insertInto('question')
+        .values(
+          transformed.map(t => ({ ...t, quiz_id: id })),
+        )
+        .execute();
+
+      return id;
+    });
+
+  redirect(`/quiz/${id}`);
+}
+
+const submissionSchema =
+  z.record(
+    z.string(),
+    z.union([
+      z.string().uuid(),
+      z.literal('on'),
+      z.string().regex(/^\d+$/),
+      z.array(z.string().regex(/^\d+$/)),
+    ]),
+  );
+
+export async function submitQuiz(formData: FormData) {
+  const user = await requireUser();
+
+  const validation = await submissionSchema
+    .safeParseAsync(Object.fromEntries(formData));
+
+  if (!validation.success) {
+    console.error(validation.error, Object.fromEntries(formData));
+    notFound();
+  }
+
+  const quizId = validation.data.quiz_id;
+
+  const quiz = await db
+    .selectFrom('quiz')
+    .selectAll()
+    .select(eb =>
+      jsonArrayFrom(
+        eb.selectFrom('question')
+          .selectAll()
+          .whereRef('question.quiz_id', '=', 'quiz.id'),
+      )
+        .as('questions'))
+    .where(eb => eb.and([
+      eb('id', '=', quizId),
+      eb.or([
+        eb('is_private', '=', false),
+        eb('owner_id', '=', user.id),
+      ]),
+    ]))
+    .executeTakeFirst()
+    .catch(() => notFound());
+
+  if (!quiz) notFound();
+
+  const attemptId = await db
+    .transaction()
+    .execute(async trx => {
+      const { id: attemptId } = await trx
+        .insertInto('quiz_attempt')
+        .values({
+          quiz_id: quizId,
+          account_id: user.id,
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow();
+
+      const questionAttempts = <{ id: string; response: number[] }[]>[];
+      for (const question of quiz.questions) {
+        const response = question.id in validation.data
+          ? validation.data[question.id]
+          : [];
+
+        if (response === 'on') {
+          questionAttempts.push({ id: question.id, response: [0] });
+        } else if (question.type === 'true_false') {
+          questionAttempts.push({ id: question.id, response: [1] });
+        } else {
+          questionAttempts.push({
+            id: question.id,
+            response: (Array.isArray(response) ? response : [response])
+              .map(r => Number(r))
+              .filter(n => !Number.isNaN(n)),
+          });
+        }
+      }
+
+      await trx
+        .insertInto('question_attempt')
+        .values(
+          questionAttempts.map(attempt => ({
+            attempt_id: attemptId,
+            question_id: attempt.id,
+            response: attempt.response,
+          })),
+        )
+        .execute();
+
+      return attemptId;
+    });
+
+  redirect(`/quiz/${quizId}/${String(attemptId)}`);
+}
 
 function generateChallenge(username?: string, password?: string, emailHash?: string, userId?: string) {
   return db

@@ -2,7 +2,12 @@ import {
   ColumnType,
   Generated,
   JSONColumnType,
+  Selectable,
 } from 'kysely';
+
+type View<T> = {
+  [K in keyof Selectable<T>]: ColumnType<Selectable<T>[K], never, never>;
+};
 
 export interface Database {
   account: Account;
@@ -11,6 +16,11 @@ export interface Database {
   quiz: Quiz;
   question_type: QuestionType;
   question: Question;
+
+  question_attempt: QuestionAttempt;
+  quiz_attempt: QuizAttempt;
+  scored_question_attempt: ScoredQuestionAttempt;
+  scored_quiz_attempt: ScoredQuizAttempt;
 }
 
 export interface Account {
@@ -48,6 +58,7 @@ export interface Quiz {
   owner_id: string;
   name: string;
   is_private: boolean;
+  created_at: ColumnType<Date, string | undefined, never>;
 }
 
 export const QuestionType = {
@@ -66,3 +77,24 @@ export interface Question {
   answers: number[],
 }
 
+export interface QuizAttempt {
+  id: Generated<number>;
+  quiz_id: string;
+  account_id: string;
+  timestamp: ColumnType<Date, string | undefined, never>;
+}
+
+export interface QuestionAttempt {
+  id: Generated<number>;
+  attempt_id: number;
+  question_id: string;
+  response: number[];
+}
+
+export type ScoredQuestionAttempt = View<QuestionAttempt & {
+  is_correct: boolean;
+}>;
+
+export type ScoredQuizAttempt = View<QuizAttempt & {
+  score: number;
+}>;

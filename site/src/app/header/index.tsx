@@ -19,13 +19,13 @@ export function Header({ user }: HeaderProps) {
   return (
     <div className="max-w-screen-lg mx-auto">
       <div className="flex items-center justify-between h-16 px-6 bg-gray-900 text-white">
-        <h1 className={`text-3xl h-11 text-cyan-500 ${darumadrop.className}`}>
+        <Link href="/" className={`text-3xl h-11 text-cyan-500 select-none ${darumadrop.className}`}>
           SnapCards
-        </h1>
+        </Link>
 
         <nav className="flex items-center gap-x-6">
           <Link href="/">Home</Link>
-          <Link href="/quizzes">Quizzes</Link>
+          <Link href="/quizzes" prefetch={false}>Quizzes</Link>
 
           {user === null ? (
             <Link
@@ -43,7 +43,7 @@ export function Header({ user }: HeaderProps) {
 
           {user && (
             <div className="group relative">
-              <p className="px-2.5 py-0.5 rounded font-mono text-sm">{user.username}</p>
+              <p className="px-2.5 py-0.5 rounded font-mono text-sm peer" tabIndex={0}>{user.username}</p>
               <UserDropdown user={user} />
             </div>
           )}

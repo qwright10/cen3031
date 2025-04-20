@@ -19,3 +19,6 @@ export type Credential = Selectable<Schema.Credential>;
 export type Quiz = Selectable<Schema.Quiz>;
 export type Question = Selectable<Schema.Question>;
 export type QuestionType = Schema.QuestionType;
+
+export type ScoredQuestionAttempt = Selectable<Schema.ScoredQuestionAttempt>;
+export type ScoredQuizAttempt = Selectable<Schema.ScoredQuizAttempt>;

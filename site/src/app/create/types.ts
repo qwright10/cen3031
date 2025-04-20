@@ -23,6 +23,13 @@ export function question(): TempQuestion {
   };
 }
 
+export function clone(question: TempQuestion): TempQuestion {
+  return {
+    ...question,
+    options: question.options.map(o => ({ ...o })),
+  };
+}
+
 export interface TempOption {
   readonly id: string;
   correct: boolean;
