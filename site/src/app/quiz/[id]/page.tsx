@@ -19,14 +19,19 @@ export default async function Quiz({ params }: QuizPageProps) {
       eb.selectFrom('scored_quiz_attempt')
         .selectAll()
         .where('scored_quiz_attempt.account_id', '=', user.id)
-        .where('scored_quiz_attempt.quiz_id', '=', id),
+        .where('scored_quiz_attempt.quiz_id', '=', id)
+        .orderBy('timestamp desc'),
     )
+    .with('last_ten', eb =>
+      eb.selectFrom('attempts')
+        .selectAll()
+        .limit(10))
     .selectFrom('quiz')
     .selectAll()
     .select(eb => [
       jsonObjectFrom(
         eb.selectFrom('account')
-          .select(['account.username'])
+          .select('account.username')
           .whereRef('account.id', '=', 'quiz.owner_id'),
       )
         .$notNull()
@@ -38,27 +43,31 @@ export default async function Quiz({ params }: QuizPageProps) {
       )
         .as('questions'),
       jsonObjectFrom(
-        eb.selectFrom('attempts')
+        eb.selectFrom('last_ten')
           .select(eb2 => [
-            eb2.fn.max('attempts.timestamp').as('most_recent_timestamp'),
-            eb2.fn.avg('attempts.score').as('average_score'),
-            eb2.fn.count('attempts.score').as('count'),
+            eb2.fn.max('last_ten.timestamp')
+              .orderBy('timestamp', 'desc')
+              .as('most_recent_timestamp'),
+            eb2.fn.avg('last_ten.score')
+              .orderBy('timestamp', 'desc')
+              .as('average_score'),
+            eb2.fn.count('last_ten.score')
+              .orderBy('timestamp', 'desc')
+              .as('count'),
           ])
-          .orderBy('timestamp desc')
-          .groupBy('timestamp')
-          .limit(10),
+          .limit(1),
       )
         .as('last_ten_attempts'),
       jsonObjectFrom(
         eb.selectFrom('attempts')
-          .select(['score', 'timestamp'])
+          .select(['id', 'score', 'timestamp'])
           .orderBy('score desc')
           .limit(1),
       )
         .as('best_attempt'),
       jsonObjectFrom(
         eb.selectFrom('attempts')
-          .select(['score', 'timestamp'])
+          .select(['id', 'score', 'timestamp'])
           .orderBy('timestamp desc')
           .limit(1),
       )
@@ -106,24 +115,28 @@ export default async function Quiz({ params }: QuizPageProps) {
           <p className="text-sm">🏆 PB</p>
           <p className="font-medium text-xl">{quiz.best_attempt?.score ? Math.round(quiz.best_attempt.score * 100) : '--'}%</p>
           {quiz.best_attempt && (
-            <p className="text-sm text-cyan-500">
+            <Link
+              href={`/quiz/${quiz.id}/attempt/${String(quiz.best_attempt.id)}`}
+              className="text-sm text-cyan-500">
               {ms(Date.now() - new Date(quiz.best_attempt.timestamp).getTime())} ago
-            </p>
+            </Link>
           )}
         </div>
 
         <div className="flex flex-col items-center">
           <p className="text-sm">Last {quiz.last_ten_attempts?.count ?? 0} avg.</p>
-          <p className="font-medium text-xl">{quiz.best_attempt?.score ? Math.round(quiz.best_attempt.score * 100) : '--'}%</p>
+          <p className="font-medium text-xl">{quiz.last_ten_attempts ? Math.round(Number(quiz.last_ten_attempts.average_score) * 100) : '--'}%</p>
         </div>
 
         <div className="flex flex-col items-center">
           <p className="text-sm">Last attempt</p>
-          <p className="font-medium text-xl">{quiz.last_attempt?.score ? Math.round(quiz.last_attempt.score * 100) : '--'}%</p>
+          <p className="font-medium text-xl">{typeof quiz.last_attempt?.score !== 'undefined' ? Math.round(quiz.last_attempt.score * 100) : '--'}%</p>
           {quiz.last_attempt && (
-            <p className="text-sm text-cyan-500">
+            <Link
+              href={`/quiz/${quiz.id}/attempt/${String(quiz.last_attempt.id)}`}
+              className="text-sm text-cyan-500">
               {ms(Date.now() - new Date(quiz.last_attempt.timestamp).getTime())} ago
-            </p>
+            </Link>
           )}
         </div>
       </div>

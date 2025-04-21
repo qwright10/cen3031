@@ -1,9 +1,10 @@
 import React from 'react';
 import { Question } from '@/db';
-import { QuestionDetail } from '@/app/quiz/[id]/question-detail';
+import { QuestionDetail } from '@/app/quiz/[id]/attempt/[attempt_id]/question-detail';
+import { QuestionAttempt } from '@/db/schema';
 
 interface QuestionEntryProps {
-  readonly question: Question;
+  readonly question: Question & QuestionAttempt;
 }
 
 export function QuestionEntry({ question }: QuestionEntryProps) {

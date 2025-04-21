@@ -25,7 +25,6 @@ export function Header({ user }: HeaderProps) {
 
         <nav className="flex items-center gap-x-6">
           <Link href="/">Home</Link>
-          <Link href="/quizzes" prefetch={false}>Quizzes</Link>
 
           {user === null ? (
             <Link

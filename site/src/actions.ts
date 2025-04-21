@@ -127,6 +127,7 @@ const submissionSchema =
   z.record(
     z.string(),
     z.union([
+      z.literal(''),
       z.string().uuid(),
       z.literal('on'),
       z.string().regex(/^\d+$/),
@@ -137,11 +138,18 @@ const submissionSchema =
 export async function submitQuiz(formData: FormData) {
   const user = await requireUser();
 
-  const validation = await submissionSchema
-    .safeParseAsync(Object.fromEntries(formData));
+  const data = Object.fromEntries(
+    [...new Set(formData.keys())]
+      .map(k => {
+        const e = formData.getAll(k);
+        if (e.length !== 1) return [k, e];
+        return [k, e[0]];
+      }),
+  );
+
+  const validation = await submissionSchema.safeParseAsync(data);
 
   if (!validation.success) {
-    console.error(validation.error, Object.fromEntries(formData));
     notFound();
   }
 
@@ -211,12 +219,12 @@ export async function submitQuiz(formData: FormData) {
             response: attempt.response,
           })),
         )
-        .execute();
+        .executeTakeFirstOrThrow();
 
       return attemptId;
     });
 
-  redirect(`/quiz/${quizId}/${String(attemptId)}`);
+  redirect(`/quiz/${quizId}/attempt/${String(attemptId)}`);
 }
 
 /*function generateChallenge(username?: string, password?: string, emailHash?: string, userId?: string) {
@@ -293,6 +301,7 @@ export async function login(username: string, password: string): Promise<LoginRe
   return 'success';
 }
 
+/*
 export async function userCredentials(username: string) {
   return db
     .selectFrom('account')
@@ -306,4 +315,4 @@ export async function userCredentials(username: string) {
         .as('credentials'))
     .where('username', '=', username)
     .executeTakeFirst();
-}
+} */

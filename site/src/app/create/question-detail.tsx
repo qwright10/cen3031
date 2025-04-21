@@ -24,11 +24,18 @@ export function QuestionDetail({
     const check = (v: boolean) => () => {
       if (!checkboxRef.current) return;
       checkboxRef.current.checked = v;
+      question.options[0].correct = v;
+      question.options[1].correct = !v;
+      store.set(index)(clone(question));
     };
 
     return (
       <div className="mt-2 by-cyan-950 w-fit rounded-lg">
-        <input type="checkbox" className="peer hidden" ref={checkboxRef} />
+        <input
+          type="checkbox"
+          className="peer hidden"
+          defaultChecked={question.options[0].correct}
+          ref={checkboxRef} />
 
         <button
           className="px-2 py-1 peer-checked:bg-cyan-600 peer-checked:shadow peer-checked:shadow-cyan-800  peer-checked:rounded-lg"

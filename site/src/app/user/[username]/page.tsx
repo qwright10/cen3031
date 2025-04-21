@@ -20,6 +20,7 @@ export default async function User({ params }: UserPageProps) {
       eb.selectFrom('scored_quiz_attempt')
         .select('timestamp')
         .whereRef('scored_quiz_attempt.account_id', '=', 'account.id')
+        .orderBy('timestamp desc')
         .limit(1)
         .as('last_attempt_timestamp'),
       jsonArrayFrom(
@@ -47,12 +48,6 @@ export default async function User({ params }: UserPageProps) {
           ])
           .groupBy('quiz.id')
           .whereRef('quiz.owner_id', '=', 'account.id')
-          .where(eb2 =>
-            eb2.or([
-              eb2('quiz.is_private', '=', false),
-              eb2('quiz.owner_id', '=', user.id),
-            ]),
-          )
           .orderBy('created_at desc'),
       )
         .as('quizzes')])
@@ -100,20 +95,20 @@ export default async function User({ params }: UserPageProps) {
         )}
 
         {target.quizzes.map(quiz => (
-          <div className="grid grid-cols-subgrid items-center px-4 col-span-full h-12 even:bg-cyan-900/50 rounded-lg" key={quiz.id}>
+          <div className="grid grid-cols-subgrid items-center px-4 col-span-full h-12 even:bg-slate-800 rounded-md" key={quiz.id}>
             <Link
               href={`/quiz/${quiz.id}`}
               className="font-semibold">
               {quiz.name}
             </Link>
 
-            <p>{quiz.is_private ? '🔒 Private' : '🌐 Public'}</p>
+            <p className="text-sm">{quiz.is_private ? '🔒 Private' : '🌐 Public'}</p>
 
-            <p>{quiz.question_count} question{quiz.question_count === 1 ? '' : 's'}</p>
+            <p className="text-sm">{quiz.question_count} question{quiz.question_count === 1 ? '' : 's'}</p>
 
             <p className="text-right">
-              <span className="font-medium">{quiz.best_attempt_score ? quiz.best_attempt_score.toFixed(2) : '--'}</span>
-              &nbsp;/&nbsp;{quiz.last_attempt_score ? quiz.last_attempt_score.toFixed(2) : '--'}
+              <span className="font-semibold">{quiz.best_attempt_score !== null ? quiz.best_attempt_score.toFixed(2) : '--'}</span>
+              &nbsp;/&nbsp;{quiz.last_attempt_score !== null ? quiz.last_attempt_score.toFixed(2) : '--'}
             </p>
 
           </div>

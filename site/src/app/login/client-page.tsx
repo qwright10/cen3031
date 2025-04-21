@@ -27,8 +27,6 @@ export function LoginPage() {
           return 'unknown' as LoginResult;
         });
 
-      console.log(result);
-
       if (result === 'not_found') {
         setError('Username does not exist');
       } else if (result === 'no_password') {
