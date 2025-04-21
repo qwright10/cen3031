@@ -10,13 +10,13 @@
 </details>
 
 ## `account`
-| Name              | Type  | 
-|-------------------|-------|
-| id*               | uuid  |
-| username          | text  |
-| email_hash        | text? |
-| password          | text? |
-| is_email_verified | bool  |
+| Name              | Type   | 
+|-------------------|--------|
+| id*               | uuid   |
+| username          | citext |
+| email_hash        | text?  |
+| password          | text?  |
+| is_email_verified | bool   |
 
 ## `challenge`
 | Name       | Type          |
@@ -25,7 +25,7 @@
 | user_id    | `account.id`? |
 | challenge  | bytea         |
 | email_hash | text?         |
-| username   | text          |
+| username   | text?         |
 | password   | text?         |
 
 ## `credential`
