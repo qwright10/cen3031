@@ -9,6 +9,7 @@ import { Selectable } from 'kysely';
 
 const jwtSecret = String(process.env['JWT_SECRET']);
 
+// find and return the sessions user, if one exists
 export async function getUser(): Promise<Selectable<Account> | null> {
   const c = await cookies();
   const __session = c.get('__session')?.value;
@@ -33,6 +34,7 @@ export async function getUser(): Promise<Selectable<Account> | null> {
   return user ?? null;
 }
 
+// require an active session or redirect to login page
 export async function requireUser() {
   return await getUser() ?? redirect('/login');
 }
