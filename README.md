@@ -1,5 +1,3 @@
-# CEN3031 Team Project
-
 <div align="center">
   <p>
     <a href="https://snapcards.org/">
@@ -24,3 +22,9 @@ SnapCards is a web-based study platform that allows you to create, share, and st
 - Create an account
 - Make a new quiz or browse quizzes from other users
 - Take a quiz and review personalized feedback
+
+<hr />
+
+#### CEN 3031 Group Project (Group 7)
+
+Wonchae Lee, Justin Oh, and Quentin Wright
