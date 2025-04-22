@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { register, RegisterResult } from '@/actions';
 
 export default function RegisterPage() {
   const [error, setError] = React.useState('');
-  const [usingPassword, setUsingPassword] = React.useState(false);
+  const [, setUsingPassword] = React.useState(false);
 
   const emailRef = React.useRef<HTMLInputElement>(null);
   const usernameRef = React.useRef<HTMLInputElement>(null);
