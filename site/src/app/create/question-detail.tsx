@@ -12,6 +12,14 @@ export interface QuestionDetailProps {
   readonly store: QuestionStore;
 }
 
+/**
+ * Question detail displayed next to question prompt
+ * @param index
+ * @param question
+ * @param store
+ * @param deleteConfirmationTimeout
+ * @param setDeleteConfirmationTimeout
+ */
 export function QuestionDetail({
   index,
   question,
@@ -21,6 +29,7 @@ export function QuestionDetail({
   const checkboxRef = React.useRef<HTMLInputElement>(null);
 
   if (question.type === 'true_false') {
+    // set checked status of checkbox and update question
     const check = (v: boolean) => () => {
       if (!checkboxRef.current) return;
       checkboxRef.current.checked = v;
@@ -115,12 +124,14 @@ export function QuestionDetail({
           className="text-xs opacity-50 text-cyan-600 hover:opacity-100 focus-visible:opacity-100 transition-opacity items-center flex gap-x-1.5"
           onClick={() => {
             if (deleteConfirmationTimeout === null) {
+              // set timeout to reset question deletion confirmation
               const timeout = window.setTimeout(() => {
                 setDeleteConfirmationTimeout(null);
               }, 3000);
 
               setDeleteConfirmationTimeout(timeout);
             } else {
+              // delete question after confirmation
               store.delete(index)();
             }
           }}>

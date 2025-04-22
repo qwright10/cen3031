@@ -5,6 +5,10 @@ interface EditToolbarProps {
   readonly addQuestion: () => void;
 }
 
+/**
+ * Toolbar displayed between each question during quiz creation
+ * @param addQuestion
+ */
 export function EditToolbar({ addQuestion }: EditToolbarProps) {
   return (
     <div className="h-6 w-full relative">

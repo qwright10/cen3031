@@ -8,6 +8,10 @@ import { EditToolbar } from '@/app/create/edit-toolbar';
 import { createQuiz, CreateQuizValidation } from '@/actions';
 import { store } from '@/app/create/store';
 
+/**
+ * Client-side quiz editor UI
+ * @constructor
+ */
 export function QuizEditor() {
   const [questions, setQuestions] = React.useState<TempQuestion[]>([
     question(),
@@ -17,10 +21,13 @@ export function QuizEditor() {
   const title = React.useRef<HTMLInputElement>(null);
   const visibility = React.useRef<HTMLSelectElement>(null);
 
+  // question store
   const qs = store({ questions, setQuestions });
 
+  // quiz submission state, if any
   const [submissionState, setSubmissionState] = React.useState<'loading' | CreateQuizValidation | null>(null);
 
+  // call createQuiz server action and respond to validation result
   const submit = () => {
     void (async () => {
       if (!title.current || !visibility.current) return;

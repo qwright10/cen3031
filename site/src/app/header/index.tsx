@@ -15,6 +15,10 @@ interface HeaderProps {
   readonly user: Selectable<Account> | null;
 }
 
+/**
+ * Header shown at the top of all pages
+ * @param user
+ */
 export function Header({ user }: HeaderProps) {
   return (
     <div className="max-w-screen-lg mx-auto">

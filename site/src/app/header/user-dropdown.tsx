@@ -5,6 +5,10 @@ interface UserDropdownProps {
   readonly user: Account;
 }
 
+/**
+ * User dropdown shown when hovering over the username in the header
+ * @param user
+ */
 export function UserDropdown({ user }: UserDropdownProps) {
   return (
     <div className="hidden group-hover:block peer-focus-within:block absolute top-1/2 -right-4">
