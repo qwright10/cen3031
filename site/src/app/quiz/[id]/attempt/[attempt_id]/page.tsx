@@ -76,7 +76,7 @@ export default async function AttemptResults({ params }: AttemptResultsProps) {
   return (
     <>
       <div className="border-b-2 pb-1 border-cyan-600 flex items-end justify-between">
-        <h1 className="text-4xl font-medium">
+        <h1 className="text-4xl font-medium max-w-[70%]">
           {attempt.quiz.name}
         </h1>
 

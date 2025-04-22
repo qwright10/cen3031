@@ -90,7 +90,7 @@ export default async function Quiz({ params }: QuizPageProps) {
   return (
     <>
       <div className="border-b-2 pb-1 border-cyan-600 flex items-end justify-between">
-        <h1 className="text-4xl font-medium">
+        <h1 className="text-4xl font-medium max-w-[50%]">
           {quiz.name}
           <span className="text-sm">{quiz.is_private ? '🔒' : '🌐'}</span>
         </h1>

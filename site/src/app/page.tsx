@@ -38,6 +38,7 @@ export default async function Home() {
       eb('quiz.is_private', '=', false),
       eb('quiz.owner_id', '=', user.id),
     ]))
+    .orderBy('created_at desc')
     .execute();
 
   return (

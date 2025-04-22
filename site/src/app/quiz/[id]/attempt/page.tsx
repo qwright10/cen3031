@@ -58,7 +58,7 @@ export default async function QuizAttempt({ params }: QuizAttemptProps) {
       <input type="hidden" name="quiz_id" value={quiz.id} />
 
       <div className="border-b-2 pb-1 border-cyan-600 flex items-end justify-between">
-        <h1 className="text-4xl font-medium">{quiz.name}</h1>
+        <h1 className="text-4xl font-medium max-w-[70%]">{quiz.name}</h1>
 
         <Timer />
 
